@@ -1011,61 +1011,6 @@ button {
   border-color: #cdb698;
 }
 
-.ai-entry-btn {
-  align-self: flex-start;
-  white-space: nowrap;
-}
-
-.ai-import-card .ai-intro {
-  color: #111;
-  font-size: 15px;
-  line-height: 1.7;
-}
-
-.ai-textarea {
-  min-height: 150px;
-}
-
-.ai-result-main {
-  display: grid;
-  gap: 6px;
-}
-
-.ai-result-main p {
-  margin: 0;
-  line-height: 1.65;
-}
-
-.ai-subtask-preview {
-  display: grid;
-  gap: 8px;
-  padding: 13px;
-  background: #fff6e9;
-  border: 1px solid #ead8c3;
-  border-radius: 16px;
-}
-
-.ai-subtask-preview p,
-.ai-result-card h3 {
-  margin: 0;
-}
-
-.ai-notes {
-  padding: 13px;
-  background: #f8efe3;
-  border: 1px solid #e5d4bf;
-  border-radius: 16px;
-}
-
-.note-list {
-  display: grid;
-  gap: 7px;
-  margin: 0;
-  padding-left: 20px;
-  color: var(--text);
-  line-height: 1.7;
-}
-
 .btn:disabled {
   opacity: 0.42;
   cursor: not-allowed;

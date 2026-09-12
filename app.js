@@ -41,10 +41,6 @@ const defaultRuntime = {
   latestFeedback: null,
   pendingUnlockedRewards: [],
   pendingRedeemableRewards: [],
-  aiImportInput: "",
-  aiImportResult: null,
-  aiImportLoading: false,
-  aiImportError: "",
   reminderSentIds: []
 };
 
@@ -398,7 +394,6 @@ function render() {
 }
 
 function renderActivePage() {
-  if (state.activeTab === "tasks" && state.taskView === "aiImport") return renderAiImportPage();
   if (state.activeTab === "tasks") return renderTasksPage();
   if (state.activeTab === "ignite") return renderIgnitePage();
   if (state.activeTab === "me" && state.selectedGrowthCardId) {
@@ -447,7 +442,6 @@ function renderTasksPage() {
         <h1 class="title home-title">今天先点燃一颗小火苗吧</h1>
         <p class="eyebrow">${todayText()}</p>
       </div>
-      <button class="link-btn ai-entry-btn" data-action="open-ai-import">AI 导入 DDL</button>
     </header>
     <div class="section-title">
       <h2>大任务</h2>
@@ -466,101 +460,7 @@ function renderTaskEmpty() {
       <p>还没有大任务。</p>
       <p>先创建一个你想推进的大目标吧。<br>比如：AI产品大赛、英语演讲、课程作业。</p>
       <button class="btn primary full" data-action="open-big-form-create">新建大任务</button>
-      <button class="btn secondary full" data-action="open-ai-import">AI 导入 DDL</button>
     </div>
-  `;
-}
-
-function renderAiImportPage() {
-  const result = state.aiImportResult;
-  return `
-    <header class="top-copy page-head">
-      <button class="icon-btn" data-action="back-tasks-home" aria-label="返回">‹</button>
-      <div>
-        <p class="eyebrow">QQ 群通知 / 课程消息 / 作业要求</p>
-        <h1 class="title">AI 导入 DDL</h1>
-      </div>
-    </header>
-    <div class="stack">
-      <section class="card module-card ai-import-card">
-        <p class="meta ai-intro">
-          把 QQ 群通知、课程群消息、老师布置的作业要求粘贴到这里，小火苗会帮你识别任务、截止时间和建议开始动作。
-        </p>
-        <form class="form" data-form="ai-import">
-          <div class="field">
-            <label for="ai-import-text">请输入或粘贴 QQ 群通知 / 作业要求 / 课程消息</label>
-            <textarea class="textarea ai-textarea" id="ai-import-text" name="content" required>${escapeHTML(state.aiImportInput || "")}</textarea>
-          </div>
-          ${state.aiImportError ? `<div class="notice">${escapeHTML(state.aiImportError)}</div>` : ""}
-          <button class="btn primary full" type="submit" ${state.aiImportLoading ? "disabled" : ""}>
-            ${state.aiImportLoading ? "正在识别..." : "AI 识别任务"}
-          </button>
-        </form>
-      </section>
-      ${result ? renderAiImportResult(result) : ""}
-    </div>
-  `;
-}
-
-function renderAiImportResult(result) {
-  if (!result.isTask || !result.subtasks?.length) {
-    return `
-      <section class="card module-card ai-result-card">
-        <div class="module-head">
-          <h2>识别结果</h2>
-        </div>
-        <div class="notice">
-          未识别到明确的课程任务或 DDL，请粘贴 QQ 群通知、作业要求或课程消息。
-        </div>
-        ${result.reason ? `<p class="meta">${escapeHTML(result.reason)}</p>` : ""}
-        <div class="choice-stack">
-          <button class="btn secondary full" data-action="rerun-ai-import">重新识别</button>
-          <button class="btn full" data-action="cancel-ai-import">取消</button>
-        </div>
-      </section>
-    `;
-  }
-
-  return `
-    <section class="card module-card ai-result-card">
-      <div class="module-head">
-        <h2>识别结果</h2>
-        <span class="priority-badge ${priorityClass(result.bigTaskPriority)}">优先级 ${result.bigTaskPriority}</span>
-      </div>
-      <div class="ai-result-main">
-        <p><strong>大任务：</strong>${escapeHTML(result.bigTaskTitle)}</p>
-        <p><strong>优先级：</strong>${escapeHTML(result.bigTaskPriority)}</p>
-        <p><strong>截止时间：</strong>${escapeHTML(result.deadline || "无")}</p>
-      </div>
-      <div class="mini-stack">
-        <h3>子任务：</h3>
-        ${result.subtasks
-          .map(
-            (subtask, index) => `
-              <div class="ai-subtask-preview">
-                <strong>${index + 1}. ${escapeHTML(subtask.title)}｜预计${subtask.estimatedMinutes}分钟｜优先级${subtask.priority}</strong>
-                <p>点火小动作：${escapeHTML(subtask.startAction)}</p>
-              </div>
-            `
-          )
-          .join("")}
-      </div>
-      ${
-        result.notes?.length
-          ? `<div class="mini-stack ai-notes">
-              <h3>提交要求 / 注意事项：</h3>
-              <ul class="note-list">
-                ${result.notes.map((note) => `<li>${escapeHTML(note)}</li>`).join("")}
-              </ul>
-            </div>`
-          : ""
-      }
-      <div class="choice-stack">
-        <button class="btn primary full" data-action="add-ai-result">一键加入任务</button>
-        <button class="btn secondary full" data-action="rerun-ai-import">重新识别</button>
-        <button class="btn full" data-action="cancel-ai-import">取消</button>
-      </div>
-    </section>
   `;
 }
 
@@ -1299,7 +1199,7 @@ function renderSettingsPage() {
       </section>
       <section class="card module-card">
         <div class="module-head"><h2>关于</h2></div>
-        <p class="meta">小火苗是一款面向大学生校园 DDL 场景的 AI 学习启动工具。它可以从课程通知、QQ 群消息和资料要求中识别学习任务，帮助你把模糊压力拆成一个个可以开始的小任务，再通过点火苗、成长卡和奖励机制，陪你从“启动不了”走向“先点一颗火苗”。</p>
+        <p class="meta">小火苗是一款面向大学生学习启动困难场景的轻量学习工具。你可以把大任务拆成更容易开始的子任务，再通过点火苗、能力累计、成长卡和奖励机制，把“知道该学但动不了”变成“先开始一点，并看见自己的推进”。</p>
       </section>
     </div>
   `;
@@ -1344,7 +1244,6 @@ function renderCreateSheet() {
   return modalShell(`
     <h2>你想创建什么？</h2>
     <div class="choice-stack">
-      <button class="btn primary full" data-action="open-ai-import">AI 导入 DDL</button>
       <button class="btn primary full" data-action="open-big-form-create">新建大任务</button>
       <button class="btn secondary full" data-action="open-choose-big">给已有大任务添加子任务</button>
       <button class="btn ghost full" data-action="close-modal">取消</button>
@@ -1857,17 +1756,6 @@ app.addEventListener("click", (event) => {
   }
 
   if (action === "open-create-sheet") state.modal = { type: "create-sheet" };
-  if (action === "open-ai-import") openAiImport();
-  if (action === "back-tasks-home") {
-    state.taskView = "home";
-    state.modal = null;
-  }
-  if (action === "cancel-ai-import") cancelAiImport();
-  if (action === "rerun-ai-import") {
-    state.aiImportResult = null;
-    state.aiImportError = "";
-  }
-  if (action === "add-ai-result") addAiResultToTasks();
   if (action === "close-modal") state.modal = null;
   if (action === "open-choose-big") state.modal = { type: "choose-big" };
   if (action === "open-big-form-create") state.modal = { type: "big-form", mode: "create" };
@@ -1994,7 +1882,6 @@ app.addEventListener("submit", (event) => {
   if (form.dataset.form === "music-bind") saveMusicBindForm(form);
   if (form.dataset.form === "ability") saveAbilityForm(form);
   if (form.dataset.form === "reward") saveRewardForm(form);
-  if (form.dataset.form === "ai-import") runAiImport(form);
   render();
 });
 
@@ -2224,86 +2111,6 @@ function saveRewardForm(form) {
   }
   recalculateRewards();
   state.modal = null;
-  saveData();
-}
-
-function openAiImport() {
-  state.activeTab = "tasks";
-  state.taskView = "aiImport";
-  state.modal = null;
-  state.aiImportError = "";
-}
-
-function cancelAiImport() {
-  state.taskView = "home";
-  state.aiImportInput = "";
-  state.aiImportResult = null;
-  state.aiImportError = "";
-  state.aiImportLoading = false;
-}
-
-async function runAiImport(form) {
-  const data = new FormData(form);
-  const content = (data.get("content") || "").trim();
-  state.aiImportInput = content;
-  state.aiImportResult = null;
-  state.aiImportError = "";
-  if (!content) {
-    state.aiImportError = "请先粘贴 QQ 群通知、作业要求或课程消息。";
-    return;
-  }
-  state.aiImportLoading = true;
-  render();
-  try {
-    state.aiImportResult = await window.aiService.extractTasks(content);
-  } catch (error) {
-    state.aiImportError = error.message || "AI 识别失败，请稍后重试。";
-    state.aiImportResult = null;
-  } finally {
-    state.aiImportLoading = false;
-    render();
-  }
-}
-
-function addAiResultToTasks() {
-  const result = state.aiImportResult;
-  if (!result?.isTask || !result.subtasks?.length) return;
-  const now = nowISO();
-  const taskId = uid("big");
-  const notes = Array.isArray(result.notes) ? result.notes.filter(Boolean) : [];
-  const bigTask = {
-    id: taskId,
-    title: result.bigTaskTitle,
-    priority: result.bigTaskPriority,
-    deadline: result.deadline || "",
-    description: notes.length
-      ? `由 AI 从 QQ 群通知 / 课程消息中识别生成。\n\n提交要求 / 注意事项：\n${notes.map((note) => `- ${note}`).join("\n")}`
-      : "由 AI 从 QQ 群通知 / 课程消息中识别生成。",
-    createdAt: now,
-    updatedAt: now,
-    subtasks: result.subtasks.map((item) => ({
-      id: uid("sub"),
-      parentTaskId: taskId,
-      title: item.title,
-      estimatedMinutes: Math.max(1, Number(item.estimatedMinutes) || 20),
-      investedMinutes: 0,
-      priority: item.priority,
-      startDate: "",
-      startTime: "",
-      isLowEnergy: false,
-      abilityIds: [],
-      startAction: item.startAction || "",
-      status: "not_started",
-      createdAt: now,
-      updatedAt: now
-    }))
-  };
-  state.bigTasks.unshift(bigTask);
-  state.expandedTaskIds = [taskId, ...state.expandedTaskIds.filter((id) => id !== taskId)];
-  state.taskView = "home";
-  state.aiImportInput = "";
-  state.aiImportResult = null;
-  state.aiImportError = "";
   saveData();
 }
 
